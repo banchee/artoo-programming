@@ -47,7 +47,7 @@ module Artoo
         puts "Disconnecting all PWM pins..."
         release_all_pwm_pins
         puts "Disconnecting all RASPI pins..."
-        release_all_raspi_pins
+        close_all_raspi_pins
         super
       end
 
@@ -113,7 +113,7 @@ module Artoo
         pwm_pins.each_value { |pwm_pin| pwm_pin.release }
       end
 
-      def release_all_raspi_pins
+      def close_all_raspi_pins
         pins.each_value { |pin| pin.close }
       end
 
