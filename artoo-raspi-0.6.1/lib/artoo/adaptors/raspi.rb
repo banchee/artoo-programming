@@ -106,7 +106,7 @@ module Artoo
       def release_raspi_pin(pin)
         pin = translate_pin(pin)
         pins[pin].close
-        pwm_pins[pin] = nil
+        pins[pin] = nil
       end
 
       def release_all_pwm_pins
