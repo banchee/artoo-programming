@@ -1,0 +1,53 @@
+require File.expand_path(File.dirname(__FILE__) + "/test_helper")
+
+class DeviceTestRobot < Artoo::Robot
+  connection :test_connection
+  device :test_device_1
+  device :test_device_2, :cool_factor => 11
+end
+
+class MultipleDeviceConnectionTestRobot < Artoo::Robot
+  connection :test_connection
+  connection :test_connection2
+  device :test_device_1, :connection => :test_connection
+  device :test_device_2, :connection => :test_connection2
+end
+
+describe Artoo::Device do
+  before do
+    @robot = DeviceTestRobot.new(:name => 'devicebot')
+  end
+
+  it 'Artoo::Device#default_connection' do
+    @robot.devices[:test_device_1].default_connection.wrapped_object.must_equal @robot.default_connection.wrapped_object
+    @robot.devices[:test_device_2].default_connection.wrapped_object.must_equal @robot.default_connection.wrapped_object
+  end
+
+  it 'Artoo::Device#connect' do
+    @robot2 = MultipleDeviceConnectionTestRobot.new
+    @robot2.devices[:test_device_1].connection.wrapped_object.must_equal @robot2.connections[:test_connection].wrapped_object
+    @robot2.devices[:test_device_2].connection.wrapped_object.must_equal @robot2.connections[:test_connection2].wrapped_object
+  end
+
+  it 'Artoo::Device#event_topic_name' do
+    @device = @robot.devices[:test_device_1]
+    @device.event_topic_name("happy").must_equal "devicebot_test_device_1_happy"
+  end
+
+  it 'Artoo::Device#as_json' do
+    @device = @robot.devices[:test_device_1]
+    MultiJson.load(@device.as_json, :symbolize_keys => true)[:name].must_equal "test_device_1"
+  end
+
+  it 'Artoo::Device#additional_params' do
+    @device = @robot.devices[:test_device_2]
+    @device.driver.additional_params[:cool_factor].must_equal 11
+  end
+
+  it 'Artoo::Device#require_interface' do
+    @device = @robot.devices[:test_device_1]
+    @device.require_interface(:ping)
+    @device.interface.name.must_equal 'ping'
+    @robot.interfaces[:ping].name.must_equal 'ping'
+  end
+end

@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'thor'
+require 'thor/group'
+require 'artoo/robot'
+require 'artoo/commands/generate'
+require 'artoo/commands/commands'
+require 'artoo/commands/install'
+require 'artoo/commands/socket'
+
+Celluloid.logger = nil
+
+# load main commands
+module CLI
+  class Root < Thor
+    include Thor::Actions
+
+    desc 'version', 'Displays the current version'
+    def version
+      say Artoo::VERSION
+    end
+
+    desc "console ROBOT", "Run a robot using the Robi console"
+    def console(robot)
+      run("robi #{robot}")
+    end
+
+    desc "start ROBOT", "Run a robot"
+    option :delay, :default => 0, :desc => "Number of seconds to wait for connections"
+    def start(robot)
+      say "Starting robot..."
+      delay = options[:delay].to_i
+      sleep(delay) if delay > 0
+      run("ruby #{robot}")
+    end
+
+    desc "generate <SUBCOMMAND> ...ARGS", "Generates a new robot or adaptor"
+    subcommand "generate", Artoo::Commands::Generate
+
+    desc "install <SUBCOMMAND> ...ARGS", "Installs utility programs, like socat"
+    subcommand "install", Artoo::Commands::Install
+  end
+end
+
+# require any custom commands installed by artoo adaptor or driver gems
+Dir["#{Artoo::Commands::Commands.install_dir}/*.rb"].each {|file| require file }
+
+CLI::Root.start
